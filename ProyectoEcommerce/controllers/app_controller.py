@@ -9,6 +9,8 @@ from controllers.registro_controller import RegistroController
 from controllers.recuperar_controller import RecuperarController
 from controllers.perfil_controller import PerfilController
 from controllers.usuarios_controller import UsuariosController
+from controllers.catalogo_controller import CatalogoController
+from controllers.carrito_controller import CarritoController
 from tkinter import messagebox
 
 class AppController:
@@ -33,11 +35,13 @@ class AppController:
             "resenas": ResenasController(self),
             "historial": HistorialController(self),
             "perfil": PerfilController(self),
-            "usuarios": UsuariosController(self)
+            "usuarios": UsuariosController(self),
+            "catalogo": CatalogoController(self),
+            "carrito": CarritoController(self)
         }
         
         self.current_controller = None
-        self.show_auth_view("login")
+        self.show_view("catalogo") # Inicia en el catalogo
         
     def _setup_styles(self):
         style = ttk.Style()
@@ -61,7 +65,7 @@ class AppController:
         self.nav_frame = ttk.Frame(self.root, style="Card.TFrame")
         self.nav_frame.pack(side="left", fill="y", padx=(0, 5), before=self.content_frame)
         
-        ttk.Label(self.nav_frame, text="Navegación", style="Title.TLabel", background="white").pack(pady=20, padx=20)
+        ttk.Label(self.nav_frame, text="Panel Admin", style="Title.TLabel", background="white").pack(pady=20, padx=20)
         
         ttk.Button(self.nav_frame, text="Inventario", style="Nav.TButton", command=lambda: self.show_view("inventario")).pack(fill="x", padx=15, pady=8)
         ttk.Button(self.nav_frame, text="Pagos", style="Nav.TButton", command=lambda: self.show_view("pagos")).pack(fill="x", padx=15, pady=8)
@@ -69,34 +73,35 @@ class AppController:
         ttk.Button(self.nav_frame, text="Historial", style="Nav.TButton", command=lambda: self.show_view("historial")).pack(fill="x", padx=15, pady=8)
         ttk.Button(self.nav_frame, text="Usuarios", style="Nav.TButton", command=lambda: self.show_view("usuarios")).pack(fill="x", padx=15, pady=8)
         ttk.Button(self.nav_frame, text="Mi Perfil", style="Nav.TButton", command=lambda: self.show_view("perfil")).pack(fill="x", padx=15, pady=8)
+        ttk.Button(self.nav_frame, text="Ir a Tienda", style="Nav.TButton", command=lambda: self.show_view("catalogo")).pack(fill="x", padx=15, pady=8)
         
         ttk.Label(self.nav_frame, text="", background="white").pack(fill="y", expand=True) # Spacer
         ttk.Button(self.nav_frame, text="Cerrar Sesión", style="Nav.TButton", command=self.logout).pack(fill="x", padx=15, pady=20, side="bottom")
 
-    def show_auth_view(self, view_name):
-        if self.nav_frame:
-            self.nav_frame.pack_forget()
-        if self.current_controller:
-            self.current_controller.view.pack_forget()
-        self.current_controller = self.controllers[view_name]
-        self.current_controller.view.pack(fill="both", expand=True)
-
-    def login_success(self):
-        if not self.nav_frame:
-            self._setup_navbar()
-        else:
-            self.nav_frame.pack(side="left", fill="y", padx=(0, 5), before=self.content_frame)
-        self.show_view("inventario")
-        
-    def logout(self):
-        if self.nav_frame:
-            self.nav_frame.pack_forget()
-        messagebox.showinfo("Sesión", "Sesión cerrada correctamente. Por seguridad, la sesión expirará automáticamente en inactividad.")
-        self.show_auth_view("login")
-
     def show_view(self, view_name):
+        admin_views = ["inventario", "pagos", "resenas", "historial", "perfil", "usuarios"]
+        
+        if view_name in admin_views:
+            if not self.nav_frame:
+                self._setup_navbar()
+            self.nav_frame.pack(side="left", fill="y", padx=(0, 5), before=self.content_frame)
+        else:
+            if self.nav_frame:
+                self.nav_frame.pack_forget()
+                
         if self.current_controller:
             self.current_controller.view.pack_forget()
             
         self.current_controller = self.controllers[view_name]
         self.current_controller.view.pack(fill="both", expand=True)
+
+    def show_auth_view(self, view_name):
+        self.show_view(view_name)
+
+    def login_success(self):
+        # Para el mockup, el login exitoso enviará al panel admin
+        self.show_view("inventario")
+        
+    def logout(self):
+        messagebox.showinfo("Sesión", "Sesión cerrada correctamente.")
+        self.show_view("catalogo")

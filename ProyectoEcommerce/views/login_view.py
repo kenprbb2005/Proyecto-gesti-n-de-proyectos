@@ -25,3 +25,6 @@ class LoginView(ttk.Frame):
         ttk.Button(container, text="Ingresar", command=self.controller.login).pack(fill="x", pady=5)
         ttk.Button(container, text="Registrarse", command=self.controller.go_to_register).pack(fill="x", pady=5)
         ttk.Button(container, text="Recuperar Contraseña", command=self.controller.go_to_recover).pack(fill="x", pady=5)
+        
+        ttk.Label(container, text="", background="white").pack(pady=5)
+        ttk.Button(container, text="Volver a la Tienda", command=lambda: self.controller.app_controller.show_view("catalogo")).pack(fill="x", pady=(10, 5))

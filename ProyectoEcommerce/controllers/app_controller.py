@@ -12,6 +12,8 @@ from controllers.usuarios_controller import UsuariosController
 from controllers.catalogo_controller import CatalogoController
 from controllers.carrito_controller import CarritoController
 from tkinter import messagebox
+from controllers.notificaciones_controller import NotificacionesController
+from controllers.panel_admin_controller import PanelAdminController
 
 class AppController:
     def __init__(self, root):
@@ -37,6 +39,8 @@ class AppController:
             "perfil": PerfilController(self),
             "usuarios": UsuariosController(self),
             "catalogo": CatalogoController(self),
+            "notificaciones": NotificacionesController(self),
+            "panel_admin": PanelAdminController(self),
             "carrito": CarritoController(self)
         }
         
@@ -74,12 +78,14 @@ class AppController:
         ttk.Button(self.nav_frame, text="Usuarios", style="Nav.TButton", command=lambda: self.show_view("usuarios")).pack(fill="x", padx=15, pady=8)
         ttk.Button(self.nav_frame, text="Mi Perfil", style="Nav.TButton", command=lambda: self.show_view("perfil")).pack(fill="x", padx=15, pady=8)
         ttk.Button(self.nav_frame, text="Ir a Tienda", style="Nav.TButton", command=lambda: self.show_view("catalogo")).pack(fill="x", padx=15, pady=8)
+        ttk.Button(self.nav_frame, text="Panel", style="Nav.TButton", command=lambda: self.show_view("panel_admin")).pack(fill="x", padx=15, pady=8)
+        ttk.Button(self.nav_frame, text="Notificaciones", style="Nav.TButton", command=lambda: self.show_view("notificaciones")).pack(fill="x", padx=15, pady=8)
         
         ttk.Label(self.nav_frame, text="", background="white").pack(fill="y", expand=True) # Spacer
         ttk.Button(self.nav_frame, text="Cerrar Sesión", style="Nav.TButton", command=self.logout).pack(fill="x", padx=15, pady=20, side="bottom")
 
     def show_view(self, view_name):
-        admin_views = ["inventario", "pagos", "resenas", "historial", "perfil", "usuarios"]
+        admin_views = ["inventario", "pagos", "resenas", "historial", "perfil", "usuarios", "notificaciones", "panel_admin"]
         
         if view_name in admin_views:
             if not self.nav_frame:

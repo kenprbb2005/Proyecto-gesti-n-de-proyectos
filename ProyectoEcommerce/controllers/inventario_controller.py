@@ -4,6 +4,8 @@ from utils.ui import clear_tree
 from controllers.helpers import parse_combo_id
 
 
+
+
 class InventarioController:
     def __init__(self, app_controller):
         self.app_controller = app_controller

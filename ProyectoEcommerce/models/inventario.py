@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from models.base import SerializableMixin, now_iso
 
 
+
 @dataclass
 class InventarioMovimiento(SerializableMixin):
     id_movimiento: str = ""

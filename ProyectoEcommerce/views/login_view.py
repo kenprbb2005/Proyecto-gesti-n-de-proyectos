@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 
+
+
 class LoginView(ttk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, style="TFrame")

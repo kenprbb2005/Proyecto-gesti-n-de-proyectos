@@ -1,78 +1,80 @@
-import tkinter as tk
 from tkinter import ttk
+import tkinter as tk
+from utils.ui import page, card, money
+
 
 class CatalogoView(ttk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, style="Main.TFrame")
         self.controller = controller
-        
-        header = ttk.Frame(self, style="Card.TFrame")
-        header.pack(fill="x", padx=20, pady=10)
-        
-        ttk.Label(header, text="Mi Tienda - Catálogo", style="Title.TLabel", background="white").pack(side="left", padx=10, pady=10)
-        
-        botones_header = ttk.Frame(header, style="Card.TFrame")
-        botones_header.pack(side="right", padx=10)
-        
-        ttk.Button(botones_header, text="Iniciar Sesión", command=self.controller.go_to_login).pack(side="left", padx=5)
-        ttk.Button(botones_header, text="Mi Carrito", command=self.controller.go_to_cart).pack(side="left", padx=5)
-        
-        # Main content
-        content = ttk.Frame(self, style="Main.TFrame")
-        content.pack(fill="both", expand=True, padx=20, pady=10)
-        
-        # Left Panel (Filters)
-        filtros = ttk.Frame(content, style="Card.TFrame")
-        filtros.pack(side="left", fill="y", padx=(0, 10))
-        
-        ttk.Label(filtros, text="Filtros", style="Title.TLabel", background="white").pack(pady=10, padx=10)
-        ttk.Label(filtros, text="Buscar por Nombre:", background="white").pack(anchor="w", padx=10)
-        ttk.Entry(filtros, width=25).pack(padx=10, pady=5)
-        
-        ttk.Label(filtros, text="Categoría:", background="white").pack(anchor="w", padx=10, pady=(10,0))
-        ttk.Combobox(filtros, values=["Todas", "Tecnología", "Ropa", "Hogar", "Deportes"], width=22).pack(padx=10, pady=5)
-        
-        ttk.Label(filtros, text="Marca:", background="white").pack(anchor="w", padx=10, pady=(10,0))
-        ttk.Combobox(filtros, values=["Todas", "Marca A", "Marca B", "Marca C"], width=22).pack(padx=10, pady=5)
-        
-        ttk.Label(filtros, text="Precio Máximo:", background="white").pack(anchor="w", padx=10, pady=(10,0))
-        ttk.Entry(filtros, width=25).pack(padx=10, pady=5)
-        
-        ttk.Button(filtros, text="Aplicar Filtros").pack(pady=20, padx=10, fill="x")
-        
-        # Center Panel (Products Treeview)
-        productos_frame = ttk.Frame(content, style="Card.TFrame")
-        productos_frame.pack(side="left", fill="both", expand=True, padx=(0, 10))
-        
-        ttk.Label(productos_frame, text="Productos Disponibles", style="Subtitle.TLabel", background="white").pack(anchor="w", padx=10, pady=10)
-        
-        self.tabla = ttk.Treeview(productos_frame, columns=("id", "nombre", "categoria", "precio", "stock"), show="headings")
-        self.tabla.heading("id", text="ID")
-        self.tabla.heading("nombre", text="Nombre del Producto")
-        self.tabla.heading("categoria", text="Categoría")
-        self.tabla.heading("precio", text="Precio")
-        self.tabla.heading("stock", text="Stock")
-        
-        self.tabla.column("id", width=50)
-        self.tabla.column("nombre", width=200)
-        self.tabla.column("categoria", width=100)
-        self.tabla.column("precio", width=80)
-        self.tabla.column("stock", width=80)
-        
-        self.tabla.pack(fill="both", expand=True, padx=10, pady=10)
-        
-        # Right Panel (Product Detail)
-        detalle_frame = ttk.Frame(content, style="Card.TFrame")
-        detalle_frame.pack(side="right", fill="y")
-        
-        ttk.Label(detalle_frame, text="Detalle del Producto", style="Title.TLabel", background="white").pack(pady=10, padx=10)
-        
-        img_placeholder = tk.Label(detalle_frame, text="[ Imagen del Producto ]", bg="#ccc", width=30, height=12)
-        img_placeholder.pack(pady=10, padx=15)
-        
-        ttk.Label(detalle_frame, text="Nombre: Seleccione un producto", background="white", wraplength=200).pack(anchor="w", padx=15, pady=5)
-        ttk.Label(detalle_frame, text="Precio: $0.00", background="white").pack(anchor="w", padx=15, pady=5)
-        ttk.Label(detalle_frame, text="Stock: 0 unidades", background="white").pack(anchor="w", padx=15, pady=5)
-        ttk.Label(detalle_frame, text="Descripción:\nLorem ipsum dolor sit amet, consectetur adipiscing elit.", background="white", wraplength=200).pack(anchor="w", padx=15, pady=5)
-        
-        ttk.Button(detalle_frame, text="Agregar al Carrito", command=self.controller.add_to_cart).pack(fill="x", padx=15, pady=20)
+        root = page(self, "Catálogo de productos", "Consulta productos, filtra por categoría y agrega al carrito.")
+
+        header = ttk.Frame(root, style="Main.TFrame")
+        header.pack(fill="x", pady=(0, 12))
+        ttk.Button(header, text="Iniciar sesión", command=self.controller.go_to_login).pack(side="right", padx=4)
+        ttk.Button(header, text="Mi carrito", style="Primary.TButton", command=self.controller.go_to_cart).pack(side="right", padx=4)
+
+        body = ttk.Frame(root, style="Main.TFrame")
+        body.pack(fill="both", expand=True)
+
+        filtros = card(body, padding=14)
+        filtros.pack(side="left", fill="y", padx=(0, 12))
+        ttk.Label(filtros, text="Filtros", style="Title.TLabel").pack(anchor="w", pady=(0, 12))
+        ttk.Label(filtros, text="Buscar", style="Field.TLabel").pack(anchor="w")
+        self.buscar = ttk.Entry(filtros, width=26)
+        self.buscar.pack(pady=(4, 10))
+        ttk.Label(filtros, text="Categoría", style="Field.TLabel").pack(anchor="w")
+        self.categoria = ttk.Combobox(filtros, values=["Todas"], width=23, state="readonly")
+        self.categoria.set("Todas")
+        self.categoria.pack(pady=(4, 10))
+        ttk.Label(filtros, text="Marca", style="Field.TLabel").pack(anchor="w")
+        self.marca = ttk.Combobox(filtros, values=["Todas"], width=23, state="readonly")
+        self.marca.set("Todas")
+        self.marca.pack(pady=(4, 10))
+        ttk.Label(filtros, text="Precio máximo", style="Field.TLabel").pack(anchor="w")
+        self.precio_maximo = ttk.Entry(filtros, width=26)
+        self.precio_maximo.pack(pady=(4, 14))
+        ttk.Button(filtros, text="Aplicar filtros", style="Primary.TButton", command=self.controller.load_products).pack(fill="x", pady=4)
+        ttk.Button(filtros, text="Limpiar", command=self.controller.clear_filters).pack(fill="x", pady=4)
+
+        tabla_card = card(body, padding=12)
+        tabla_card.pack(side="left", fill="both", expand=True, padx=(0, 12))
+        ttk.Label(tabla_card, text="Productos disponibles", style="Title.TLabel").pack(anchor="w", pady=(0, 10))
+        self.tabla = ttk.Treeview(tabla_card, columns=("id", "nombre", "categoria", "marca", "precio", "stock"), show="headings")
+        encabezados = {"id": "ID", "nombre": "Producto", "categoria": "Categoría", "marca": "Marca", "precio": "Precio", "stock": "Stock"}
+        for col, text in encabezados.items():
+            self.tabla.heading(col, text=text)
+            self.tabla.column(col, width=120)
+        self.tabla.column("nombre", width=230)
+        self.tabla.column("id", width=90)
+        self.tabla.pack(fill="both", expand=True)
+        self.tabla.bind("<<TreeviewSelect>>", lambda e: self.controller.show_selected_detail())
+
+        detalle = card(body, padding=14)
+        detalle.pack(side="right", fill="y")
+        ttk.Label(detalle, text="Detalle", style="Title.TLabel").pack(anchor="w", pady=(0, 12))
+        self.detalle_nombre = ttk.Label(detalle, text="Seleccione un producto", wraplength=250)
+        self.detalle_nombre.pack(anchor="w", pady=4)
+        self.detalle_precio = ttk.Label(detalle, text="Precio: ₡0.00")
+        self.detalle_precio.pack(anchor="w", pady=4)
+        self.detalle_stock = ttk.Label(detalle, text="Stock: 0")
+        self.detalle_stock.pack(anchor="w", pady=4)
+        self.detalle_descripcion = ttk.Label(detalle, text="Descripción: -", wraplength=250)
+        self.detalle_descripcion.pack(anchor="w", pady=8)
+        ttk.Label(detalle, text="Cantidad", style="Field.TLabel").pack(anchor="w", pady=(14, 0))
+        self.cantidad = ttk.Spinbox(detalle, from_=1, to=99, width=10)
+        self.cantidad.set(1)
+        self.cantidad.pack(anchor="w", pady=5)
+        ttk.Button(detalle, text="Agregar al carrito", style="Success.TButton", command=self.controller.add_to_cart).pack(fill="x", pady=(14, 4))
+
+    def set_detail(self, producto=None):
+        if not producto:
+            self.detalle_nombre.config(text="Seleccione un producto")
+            self.detalle_precio.config(text="Precio: ₡0.00")
+            self.detalle_stock.config(text="Stock: 0")
+            self.detalle_descripcion.config(text="Descripción: -")
+            return
+        self.detalle_nombre.config(text=producto.nombre)
+        self.detalle_precio.config(text=f"Precio: {money(producto.precio)}")
+        self.detalle_stock.config(text=f"Stock: {producto.stock}")
+        self.detalle_descripcion.config(text=f"Descripción: {producto.descripcion or '-'}")

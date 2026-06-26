@@ -1,19 +1,17 @@
-import tkinter as tk
 from tkinter import ttk
+from utils.ui import card
+
 
 class RecuperarView(ttk.Frame):
     def __init__(self, parent, controller):
-        super().__init__(parent, style="TFrame")
+        super().__init__(parent, style="Main.TFrame")
         self.controller = controller
-        
-        container = ttk.Frame(self, style="Card.TFrame", padding=30)
+        container = card(self, padding=34)
         container.place(relx=0.5, rely=0.5, anchor="center")
-        
-        ttk.Label(container, text="Recuperar Contraseña", style="Title.TLabel", background="white").pack(pady=(0, 20))
-        ttk.Label(container, text="Ingresa tu correo para recibir un enlace de recuperación.", wraplength=250, background="white").pack(pady=(0, 20))
-        
-        ttk.Label(container, text="Correo Electrónico", background="white").pack(anchor="w")
-        ttk.Entry(container, width=40).pack(pady=(0, 20))
-        
-        ttk.Button(container, text="Enviar Enlace", command=self.controller.recover).pack(fill="x", pady=5)
-        ttk.Button(container, text="Volver al Login", command=self.controller.go_to_login).pack(fill="x", pady=5)
+        ttk.Label(container, text="Recuperar contraseña", style="Title.TLabel").pack(pady=(0, 10))
+        ttk.Label(container, text="Recuperación simulada para el proyecto académico.", wraplength=310).pack(pady=(0, 18))
+        ttk.Label(container, text="Correo electrónico", style="Field.TLabel").pack(anchor="w")
+        self.email = ttk.Entry(container, width=42)
+        self.email.pack(pady=(4, 18))
+        ttk.Button(container, text="Enviar recuperación", style="Primary.TButton", command=self.controller.recover).pack(fill="x", pady=4)
+        ttk.Button(container, text="Volver al login", command=self.controller.go_to_login).pack(fill="x", pady=4)

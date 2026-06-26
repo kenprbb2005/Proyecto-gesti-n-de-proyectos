@@ -1,0 +1,54 @@
+[
+    {
+        "id_producto": "PROD001",
+        "nombre": "Audífonos Bluetooth",
+        "id_categoria": "CAT001",
+        "categoria": "Tecnología",
+        "marca": "SoundPro",
+        "precio": 18500.0,
+        "stock": 15,
+        "stock_minimo": 5,
+        "descripcion": "Audífonos inalámbricos con estuche de carga.",
+        "estado": "Disponible",
+        "fecha_creacion": "2026-06-23 12:00:00"
+    },
+    {
+        "id_producto": "PROD002",
+        "nombre": "Mouse inalámbrico",
+        "id_categoria": "CAT001",
+        "categoria": "Tecnología",
+        "marca": "TechLine",
+        "precio": 9500.0,
+        "stock": 8,
+        "stock_minimo": 4,
+        "descripcion": "Mouse ergonómico de 2.4 GHz.",
+        "estado": "Disponible",
+        "fecha_creacion": "2026-06-23 12:00:00"
+    },
+    {
+        "id_producto": "PROD003",
+        "nombre": "Botella térmica",
+        "id_categoria": "CAT002",
+        "categoria": "Hogar",
+        "marca": "CasaPlus",
+        "precio": 7200.0,
+        "stock": 20,
+        "stock_minimo": 5,
+        "descripcion": "Botella de acero inoxidable para bebidas frías o calientes.",
+        "estado": "Disponible",
+        "fecha_creacion": "2026-06-23 12:00:00"
+    },
+    {
+        "id_producto": "PROD004",
+        "nombre": "Guantes deportivos",
+        "id_categoria": "CAT003",
+        "categoria": "Deportes",
+        "marca": "FitMax",
+        "precio": 12500.0,
+        "stock": 4,
+        "stock_minimo": 5,
+        "descripcion": "Guantes para entrenamiento funcional.",
+        "estado": "Disponible",
+        "fecha_creacion": "2026-06-23 12:00:00"
+    }
+]

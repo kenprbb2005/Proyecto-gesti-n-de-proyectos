@@ -1,0 +1,23 @@
+[
+    {
+        "id_categoria": "CAT001",
+        "nombre": "Tecnología",
+        "descripcion": "Productos electrónicos y accesorios",
+        "estado": "Activa",
+        "fecha_creacion": "2026-06-23 12:00:00"
+    },
+    {
+        "id_categoria": "CAT002",
+        "nombre": "Hogar",
+        "descripcion": "Artículos para casa",
+        "estado": "Activa",
+        "fecha_creacion": "2026-06-23 12:00:00"
+    },
+    {
+        "id_categoria": "CAT003",
+        "nombre": "Deportes",
+        "descripcion": "Equipo deportivo",
+        "estado": "Activa",
+        "fecha_creacion": "2026-06-23 12:00:00"
+    }
+]

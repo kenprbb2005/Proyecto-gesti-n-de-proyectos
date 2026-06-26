@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from models.base import SerializableMixin, now_iso
 
 
+
 @dataclass
 class Historial(SerializableMixin):
     id_historial: str = ""

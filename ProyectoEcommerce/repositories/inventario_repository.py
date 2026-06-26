@@ -4,6 +4,7 @@ from repositories.json_repository import JsonRepository
 from repositories.paths import DATA_DIR
 
 
+
 class InventarioRepository(JsonRepository[InventarioMovimiento]):
     def __init__(self):
         super().__init__(DATA_DIR / "inventario.json", InventarioMovimiento, "id_movimiento")

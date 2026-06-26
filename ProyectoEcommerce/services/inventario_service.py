@@ -4,6 +4,8 @@ from repositories.inventario_repository import InventarioRepository
 from services.producto_service import ProductoService
 
 
+
+
 class InventarioService:
     TIPOS_VALIDOS = ["Entrada", "Salida", "Ajuste"]
 

@@ -1,7 +1,6 @@
 from views.admin_panel_view import AdminPanelView
 from utils.ui import clear_tree
 
-
 class AdminPanelController:
     def __init__(self, app_controller):
         self.app_controller = app_controller

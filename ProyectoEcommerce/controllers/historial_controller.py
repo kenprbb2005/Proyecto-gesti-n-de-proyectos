@@ -2,6 +2,7 @@ from views.historial_view import HistorialView
 from utils.ui import clear_tree
 
 
+
 class HistorialController:
     def __init__(self, app_controller):
         self.app_controller = app_controller

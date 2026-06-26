@@ -10,3 +10,4 @@ class NotificacionRepository(JsonRepository[Notificacion]):
 
     def find_by_usuario(self, id_usuario: str) -> List[Notificacion]:
         return [n for n in self.find_all() if n.id_usuario == id_usuario]
+

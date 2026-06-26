@@ -3,6 +3,7 @@ from models.notificacion import Notificacion
 from repositories.notificacion_repository import NotificacionRepository
 
 
+
 class NotificacionService:
     def __init__(self, notificacion_repository: Optional[NotificacionRepository] = None):
         self.notificacion_repository = notificacion_repository or NotificacionRepository()

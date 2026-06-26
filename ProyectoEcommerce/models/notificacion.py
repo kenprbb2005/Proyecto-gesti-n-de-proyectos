@@ -11,3 +11,4 @@ class Notificacion(SerializableMixin):
     tipo: str = "Sistema"  # Sistema / Pedido / Pago / Inventario / Reseña
     leida: bool = False
     fecha: str = field(default_factory=now_iso)
+

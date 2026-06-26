@@ -3,7 +3,6 @@ from views.notificaciones_view import NotificacionesView
 from utils.ui import clear_tree
 from controllers.helpers import get_selected_values
 
-
 class NotificacionesController:
     def __init__(self, app_controller):
         self.app_controller = app_controller

@@ -33,3 +33,4 @@ class NotificacionesView(ttk.Frame):
         for col, text in headers.items(): self.tabla.heading(col, text=text); self.tabla.column(col, width=130)
         self.tabla.column("mensaje", width=380)
         self.tabla.pack(fill="both", expand=True)
+

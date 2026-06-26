@@ -3,8 +3,6 @@ from tkinter import ttk
 from utils.ui import card
 
 
-
-
 class LoginView(ttk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, style="Main.TFrame")

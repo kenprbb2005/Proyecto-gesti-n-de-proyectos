@@ -1,94 +1,31 @@
-import tkinter as tk
 from tkinter import ttk
+from utils.ui import page, card
+
 
 class InventarioView(ttk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, style="Main.TFrame")
         self.controller = controller
-        
-        contenedor = ttk.Frame(self, style="Main.TFrame")
-        contenedor.pack(fill="both", expand=True, padx=30, pady=25)
-
-        ttk.Label(contenedor, text="Módulo de Inventario", style="Header.TLabel").pack(anchor="w")
-        ttk.Label(
-            contenedor,
-            text="Control visual de existencias, entradas, salidas y estado del stock.",
-            style="Subheader.TLabel"
-        ).pack(anchor="w", pady=(0, 20))
-
-        formulario = ttk.Frame(contenedor, style="Card.TFrame")
-        formulario.pack(fill="x", pady=10)
-
-        campos = [
-            ("ID Inventario", 0, 0),
-            ("ID Producto", 0, 2),
-            ("Nombre del producto", 1, 0),
-            ("Cantidad disponible", 1, 2),
-            ("Stock mínimo", 2, 0),
-            ("Fecha actualización", 2, 2),
-        ]
-
-        for texto, fila, columna in campos:
-            ttk.Label(formulario, text=texto, style="Field.TLabel").grid(row=fila, column=columna, padx=18, pady=14, sticky="w")
-            ttk.Entry(formulario, width=34).grid(row=fila, column=columna + 1, padx=18, pady=14)
-
-        ttk.Label(formulario, text="Categoría", style="Field.TLabel").grid(row=3, column=0, padx=18, pady=14, sticky="w")
-        ttk.Combobox(
-            formulario,
-            values=["Tecnología", "Ropa", "Hogar", "Librería", "Alimentos", "Otros"],
-            width=31
-        ).grid(row=3, column=1, padx=18, pady=14)
-
-        ttk.Label(formulario, text="Estado de stock", style="Field.TLabel").grid(row=3, column=2, padx=18, pady=14, sticky="w")
-        ttk.Combobox(
-            formulario,
-            values=["Disponible", "Bajo stock", "Agotado", "Inactivo"],
-            width=31
-        ).grid(row=3, column=3, padx=18, pady=14)
-
-        botones = ttk.Frame(contenedor, style="Main.TFrame")
-        botones.pack(fill="x", pady=15)
-
-        ttk.Button(botones, text="Registrar producto").pack(side="left", padx=5)
-        ttk.Button(botones, text="Actualizar stock").pack(side="left", padx=5)
-        ttk.Button(botones, text="Eliminar registro").pack(side="left", padx=5)
-        ttk.Button(botones, text="Buscar producto").pack(side="left", padx=5)
-        ttk.Button(botones, text="Limpiar campos").pack(side="left", padx=5)
-
-        tabla_frame = ttk.Frame(contenedor, style="Card.TFrame")
-        tabla_frame.pack(fill="both", expand=True, pady=10)
-
-        tabla = ttk.Treeview(
-            tabla_frame,
-            columns=("id_inventario", "id_producto", "producto", "categoria", "cantidad", "stock_minimo", "fecha", "estado"),
-            show="headings"
-        )
-
-        encabezados = {
-            "id_inventario": "ID Inventario",
-            "id_producto": "ID Producto",
-            "producto": "Producto",
-            "categoria": "Categoría",
-            "cantidad": "Cantidad",
-            "stock_minimo": "Stock mínimo",
-            "fecha": "Fecha actualización",
-            "estado": "Estado"
-        }
-
-        for columna, texto in encabezados.items():
-            tabla.heading(columna, text=texto)
-            tabla.column(columna, width=145)
-
-        tabla.column("producto", width=230)
-
-        scroll_y = ttk.Scrollbar(tabla_frame, orient="vertical", command=tabla.yview)
-        scroll_x = ttk.Scrollbar(tabla_frame, orient="horizontal", command=tabla.xview)
-
-        tabla.configure(yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set)
-
-        tabla.grid(row=0, column=0, sticky="nsew")
-        scroll_y.grid(row=0, column=1, sticky="ns")
-        scroll_x.grid(row=1, column=0, sticky="ew")
-
-        tabla_frame.rowconfigure(0, weight=1)
-        tabla_frame.columnconfigure(0, weight=1)
+        root = page(self, "Inventario", "Entradas, salidas y ajustes de stock con control de existencias.")
+        form = card(root, padding=14); form.pack(fill="x", pady=(0, 12))
+        self.producto = ttk.Combobox(form, values=[], state="readonly", width=36)
+        self.tipo = ttk.Combobox(form, values=["Entrada", "Salida", "Ajuste"], state="readonly", width=24); self.tipo.set("Entrada")
+        self.cantidad = ttk.Entry(form, width=24)
+        self.motivo = ttk.Entry(form, width=70)
+        fields = [("Producto", self.producto), ("Tipo", self.tipo), ("Cantidad", self.cantidad)]
+        for i, (label, widget) in enumerate(fields):
+            ttk.Label(form, text=label, style="Field.TLabel").grid(row=0, column=i, padx=8, pady=(4,0), sticky="w")
+            widget.grid(row=1, column=i, padx=8, pady=(2,8), sticky="ew")
+        ttk.Label(form, text="Motivo", style="Field.TLabel").grid(row=2, column=0, padx=8, sticky="w")
+        self.motivo.grid(row=3, column=0, columnspan=3, padx=8, pady=(2,8), sticky="ew")
+        for i in range(3): form.columnconfigure(i, weight=1)
+        buttons = ttk.Frame(root, style="Main.TFrame"); buttons.pack(fill="x", pady=(0, 12))
+        ttk.Button(buttons, text="Registrar movimiento", style="Success.TButton", command=self.controller.create_movement).pack(side="left", padx=4)
+        ttk.Button(buttons, text="Actualizar", style="Primary.TButton", command=self.controller.load_movements).pack(side="left", padx=4)
+        ttk.Button(buttons, text="Limpiar", command=self.controller.clear_form).pack(side="left", padx=4)
+        table_card = card(root, padding=12); table_card.pack(fill="both", expand=True)
+        self.tabla = ttk.Treeview(table_card, columns=("id", "producto", "tipo", "cantidad", "anterior", "nuevo", "motivo", "fecha"), show="headings")
+        headers = {"id":"ID", "producto":"ID producto", "tipo":"Tipo", "cantidad":"Cantidad", "anterior":"Anterior", "nuevo":"Nuevo", "motivo":"Motivo", "fecha":"Fecha"}
+        for col, text in headers.items(): self.tabla.heading(col, text=text); self.tabla.column(col, width=120)
+        self.tabla.column("motivo", width=260)
+        self.tabla.pack(fill="both", expand=True)

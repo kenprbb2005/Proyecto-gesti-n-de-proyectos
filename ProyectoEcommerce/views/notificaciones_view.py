@@ -1,96 +1,35 @@
-import tkinter as tk
 from tkinter import ttk
+import tkinter as tk
+from utils.ui import page, card
+
 
 class NotificacionesView(ttk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, style="Main.TFrame")
         self.controller = controller
-
-        contenedor = ttk.Frame(self, style="Main.TFrame")
-        contenedor.pack(fill="both", expand=True, padx=30, pady=25)
-
-        ttk.Label(contenedor, text="Módulo de Notificaciones", style="Header.TLabel").pack(anchor="w")
-        ttk.Label(
-            contenedor,
-            text="Gestión visual de avisos, alertas y mensajes enviados a los usuarios.",
-            style="Subheader.TLabel"
-        ).pack(anchor="w", pady=(0, 20))
-
-        formulario = ttk.Frame(contenedor, style="Card.TFrame")
-        formulario.pack(fill="x", pady=10)
-
-        campos = [
-            ("ID Notificación", 0, 0),
-            ("ID Usuario", 0, 2),
-            ("Título", 1, 0),
-            ("Fecha", 1, 2),
-        ]
-
-        for texto, fila, columna in campos:
-            ttk.Label(formulario, text=texto, style="Field.TLabel").grid(row=fila, column=columna, padx=18, pady=14, sticky="w")
-            ttk.Entry(formulario, width=34).grid(row=fila, column=columna + 1, padx=18, pady=14)
-
-        ttk.Label(formulario, text="Tipo", style="Field.TLabel").grid(row=2, column=0, padx=18, pady=14, sticky="w")
-        ttk.Combobox(
-            formulario,
-            values=["Información", "Alerta", "Promoción", "Sistema", "Recordatorio"],
-            width=31
-        ).grid(row=2, column=1, padx=18, pady=14)
-
-        ttk.Label(formulario, text="Estado", style="Field.TLabel").grid(row=2, column=2, padx=18, pady=14, sticky="w")
-        ttk.Combobox(
-            formulario,
-            values=["No leída", "Leída", "Enviada", "Programada", "Eliminada"],
-            width=31
-        ).grid(row=2, column=3, padx=18, pady=14)
-
-        ttk.Label(formulario, text="Mensaje", style="Field.TLabel").grid(row=3, column=0, padx=18, pady=14, sticky="nw")
-        mensaje = tk.Text(formulario, width=86, height=4, font=("Segoe UI", 10), relief="solid", bd=1)
-        mensaje.grid(row=3, column=1, columnspan=3, padx=18, pady=14, sticky="w")
-
-        botones = ttk.Frame(contenedor, style="Main.TFrame")
-        botones.pack(fill="x", pady=15)
-
-        ttk.Button(botones, text="Registrar notificación").pack(side="left", padx=5)
-        ttk.Button(botones, text="Editar notificación").pack(side="left", padx=5)
-        ttk.Button(botones, text="Eliminar notificación").pack(side="left", padx=5)
-        ttk.Button(botones, text="Marcar como leída").pack(side="left", padx=5)
-        ttk.Button(botones, text="Buscar").pack(side="left", padx=5)
-        ttk.Button(botones, text="Limpiar campos").pack(side="left", padx=5)
-
-        tabla_frame = ttk.Frame(contenedor, style="Card.TFrame")
-        tabla_frame.pack(fill="both", expand=True, pady=10)
-
-        tabla = ttk.Treeview(
-            tabla_frame,
-            columns=("id_notificacion", "id_usuario", "titulo", "mensaje", "tipo", "fecha", "estado"),
-            show="headings"
-        )
-
-        encabezados = {
-            "id_notificacion": "ID Notificación",
-            "id_usuario": "ID Usuario",
-            "titulo": "Título",
-            "mensaje": "Mensaje",
-            "tipo": "Tipo",
-            "fecha": "Fecha",
-            "estado": "Estado"
-        }
-
-        for columna, texto in encabezados.items():
-            tabla.heading(columna, text=texto)
-            tabla.column(columna, width=150)
-
-        tabla.column("mensaje", width=280)
-
-        scroll_y = ttk.Scrollbar(tabla_frame, orient="vertical", command=tabla.yview)
-        scroll_x = ttk.Scrollbar(tabla_frame, orient="horizontal", command=tabla.xview)
-
-        tabla.configure(yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set)
-
-        tabla.grid(row=0, column=0, sticky="nsew")
-        scroll_y.grid(row=0, column=1, sticky="ns")
-        scroll_x.grid(row=1, column=0, sticky="ew")
-
-        tabla_frame.rowconfigure(0, weight=1)
-        tabla_frame.columnconfigure(0, weight=1)
+        root = page(self, "Notificaciones", "Mensajes del sistema, pedidos, pagos, inventario y reseñas.")
+        form = card(root, padding=14); form.pack(fill="x", pady=(0, 12))
+        self.id_usuario = ttk.Entry(form, width=30)
+        self.titulo = ttk.Entry(form, width=30)
+        self.tipo = ttk.Combobox(form, values=["Sistema", "Pedido", "Pago", "Inventario", "Reseña"], state="readonly", width=27); self.tipo.set("Sistema")
+        ttk.Label(form, text="ID usuario", style="Field.TLabel").grid(row=0, column=0, padx=8, sticky="w")
+        self.id_usuario.grid(row=1, column=0, padx=8, pady=(2,8), sticky="ew")
+        ttk.Label(form, text="Título", style="Field.TLabel").grid(row=0, column=1, padx=8, sticky="w")
+        self.titulo.grid(row=1, column=1, padx=8, pady=(2,8), sticky="ew")
+        ttk.Label(form, text="Tipo", style="Field.TLabel").grid(row=0, column=2, padx=8, sticky="w")
+        self.tipo.grid(row=1, column=2, padx=8, pady=(2,8), sticky="ew")
+        ttk.Label(form, text="Mensaje", style="Field.TLabel").grid(row=2, column=0, padx=8, sticky="w")
+        self.mensaje = tk.Text(form, height=3, font=("Segoe UI", 10))
+        self.mensaje.grid(row=3, column=0, columnspan=3, padx=8, pady=(2,8), sticky="ew")
+        for i in range(3): form.columnconfigure(i, weight=1)
+        buttons = ttk.Frame(root, style="Main.TFrame"); buttons.pack(fill="x", pady=(0, 12))
+        ttk.Button(buttons, text="Crear notificación", style="Success.TButton", command=self.controller.create_notification).pack(side="left", padx=4)
+        ttk.Button(buttons, text="Marcar leída", style="Primary.TButton", command=self.controller.mark_read).pack(side="left", padx=4)
+        ttk.Button(buttons, text="Eliminar", style="Danger.TButton", command=self.controller.delete_notification).pack(side="left", padx=4)
+        ttk.Button(buttons, text="Actualizar", command=self.controller.load_notifications).pack(side="left", padx=4)
+        table_card = card(root, padding=12); table_card.pack(fill="both", expand=True)
+        self.tabla = ttk.Treeview(table_card, columns=("id", "usuario", "titulo", "mensaje", "tipo", "leida", "fecha"), show="headings")
+        headers = {"id":"ID", "usuario":"Usuario", "titulo":"Título", "mensaje":"Mensaje", "tipo":"Tipo", "leida":"Leída", "fecha":"Fecha"}
+        for col, text in headers.items(): self.tabla.heading(col, text=text); self.tabla.column(col, width=130)
+        self.tabla.column("mensaje", width=380)
+        self.tabla.pack(fill="both", expand=True)

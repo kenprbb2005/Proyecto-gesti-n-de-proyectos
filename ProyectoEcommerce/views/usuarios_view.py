@@ -1,93 +1,39 @@
-import tkinter as tk
 from tkinter import ttk
+from utils.ui import page, card
+
 
 class UsuariosView(ttk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, style="Main.TFrame")
         self.controller = controller
-        
-        contenedor = ttk.Frame(self, style="Main.TFrame")
-        contenedor.pack(fill="both", expand=True, padx=30, pady=25)
-
-        ttk.Label(contenedor, text="Gestión de Usuarios", style="Header.TLabel").pack(anchor="w")
-        ttk.Label(
-            contenedor,
-            text="Administración de cuentas, roles y estado de acceso de los usuarios.",
-            style="Subheader.TLabel"
-        ).pack(anchor="w", pady=(0, 20))
-
-        formulario = ttk.Frame(contenedor, style="Card.TFrame")
-        formulario.pack(fill="x", pady=10)
-
-        campos = [
-            ("ID Usuario", 0, 0),
-            ("Nombre Completo", 0, 2),
-            ("Correo Electrónico", 1, 0),
-        ]
-
-        for texto, fila, columna in campos:
-            ttk.Label(formulario, text=texto, style="Field.TLabel").grid(row=fila, column=columna, padx=18, pady=14, sticky="w")
-            ttk.Entry(formulario, width=34).grid(row=fila, column=columna + 1, padx=18, pady=14)
-
-        ttk.Label(formulario, text="Contraseña", style="Field.TLabel").grid(row=1, column=2, padx=18, pady=14, sticky="w")
-        ttk.Entry(formulario, width=34, show="*").grid(row=1, column=3, padx=18, pady=14)
-
-        ttk.Label(formulario, text="Rol", style="Field.TLabel").grid(row=2, column=0, padx=18, pady=14, sticky="w")
-        ttk.Combobox(
-            formulario,
-            values=["Administrador", "Cliente", "Vendedor", "Soporte"],
-            width=31
-        ).grid(row=2, column=1, padx=18, pady=14)
-
-        ttk.Label(formulario, text="Estado", style="Field.TLabel").grid(row=2, column=2, padx=18, pady=14, sticky="w")
-        ttk.Combobox(
-            formulario,
-            values=["Activo", "Inactivo", "Bloqueado"],
-            width=31
-        ).grid(row=2, column=3, padx=18, pady=14)
-
-        botones = ttk.Frame(contenedor, style="Main.TFrame")
-        botones.pack(fill="x", pady=15)
-
-        ttk.Button(botones, text="Registrar Usuario").pack(side="left", padx=5)
-        ttk.Button(botones, text="Guardar Cambios").pack(side="left", padx=5)
-        ttk.Button(botones, text="Eliminar").pack(side="left", padx=5)
-        ttk.Button(botones, text="Activar / Desactivar").pack(side="left", padx=5)
-        ttk.Button(botones, text="Buscar").pack(side="left", padx=5)
-        ttk.Button(botones, text="Limpiar").pack(side="left", padx=5)
-
-        tabla_frame = ttk.Frame(contenedor, style="Card.TFrame")
-        tabla_frame.pack(fill="both", expand=True, pady=10)
-
-        tabla = ttk.Treeview(
-            tabla_frame,
-            columns=("id_usuario", "nombre", "correo", "rol", "estado"),
-            show="headings"
-        )
-
-        encabezados = {
-            "id_usuario": "ID Usuario",
-            "nombre": "Nombre Completo",
-            "correo": "Correo Electrónico",
-            "rol": "Rol",
-            "estado": "Estado"
-        }
-
-        for columna, texto in encabezados.items():
-            tabla.heading(columna, text=texto)
-            tabla.column(columna, width=150)
-            
-        tabla.column("nombre", width=220)
-        tabla.column("correo", width=220)
-
-        scroll_y = ttk.Scrollbar(tabla_frame, orient="vertical", command=tabla.yview)
-        scroll_x = ttk.Scrollbar(tabla_frame, orient="horizontal", command=tabla.xview)
-
-        tabla.configure(yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set)
-
-        tabla.grid(row=0, column=0, sticky="nsew")
-        scroll_y.grid(row=0, column=1, sticky="ns")
-        scroll_x.grid(row=1, column=0, sticky="ew")
-
-        tabla_frame.rowconfigure(0, weight=1)
-        tabla_frame.columnconfigure(0, weight=1)
+        root = page(self, "Usuarios", "Administración de cuentas, roles y estado de acceso.")
+        form = card(root, padding=14)
+        form.pack(fill="x", pady=(0, 12))
+        self.id_usuario = ttk.Entry(form, width=28)
+        self.nombre = ttk.Entry(form, width=28)
+        self.correo = ttk.Entry(form, width=28)
+        self.contrasena = ttk.Entry(form, width=28, show="*")
+        self.rol = ttk.Combobox(form, values=["Administrador", "Cliente", "Vendedor", "Soporte"], state="readonly", width=25)
+        self.estado = ttk.Combobox(form, values=["Activo", "Inactivo", "Bloqueado"], state="readonly", width=25)
+        self.rol.set("Cliente"); self.estado.set("Activo")
+        fields = [("ID", self.id_usuario), ("Nombre", self.nombre), ("Correo", self.correo), ("Contraseña", self.contrasena), ("Rol", self.rol), ("Estado", self.estado)]
+        for i, (label, widget) in enumerate(fields):
+            ttk.Label(form, text=label, style="Field.TLabel").grid(row=i//3*2, column=i%3, padx=8, pady=(4,0), sticky="w")
+            widget.grid(row=i//3*2+1, column=i%3, padx=8, pady=(2,8), sticky="ew")
+        for i in range(3): form.columnconfigure(i, weight=1)
+        buttons = ttk.Frame(root, style="Main.TFrame"); buttons.pack(fill="x", pady=(0, 12))
+        ttk.Button(buttons, text="Registrar", style="Success.TButton", command=self.controller.create_user).pack(side="left", padx=4)
+        ttk.Button(buttons, text="Guardar cambios", style="Primary.TButton", command=self.controller.update_user).pack(side="left", padx=4)
+        ttk.Button(buttons, text="Activar/Inactivar", command=self.controller.toggle_user_status).pack(side="left", padx=4)
+        ttk.Button(buttons, text="Eliminar", style="Danger.TButton", command=self.controller.delete_user).pack(side="left", padx=4)
+        ttk.Button(buttons, text="Limpiar", command=self.controller.clear_form).pack(side="left", padx=4)
+        ttk.Label(buttons, text="Buscar:", background="#eef2f7").pack(side="left", padx=(25,4))
+        self.buscar = ttk.Entry(buttons, width=30); self.buscar.pack(side="left", padx=4)
+        ttk.Button(buttons, text="Buscar", command=self.controller.search_users).pack(side="left", padx=4)
+        table_card = card(root, padding=12); table_card.pack(fill="both", expand=True)
+        self.tabla = ttk.Treeview(table_card, columns=("id", "nombre", "correo", "rol", "estado", "fecha"), show="headings")
+        for col, text in {"id":"ID", "nombre":"Nombre", "correo":"Correo", "rol":"Rol", "estado":"Estado", "fecha":"Registro"}.items():
+            self.tabla.heading(col, text=text); self.tabla.column(col, width=140)
+        self.tabla.column("nombre", width=220); self.tabla.column("correo", width=240)
+        self.tabla.pack(fill="both", expand=True)
+        self.tabla.bind("<<TreeviewSelect>>", lambda e: self.controller.fill_form_from_selection())

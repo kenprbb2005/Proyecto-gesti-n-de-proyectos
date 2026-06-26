@@ -1,66 +1,20 @@
-import tkinter as tk
 from tkinter import ttk
+from utils.ui import page, card
+
 
 class HistorialView(ttk.Frame):
     def __init__(self, parent, controller):
-        super().__init__(parent, style="TFrame")
+        super().__init__(parent, style="Main.TFrame")
         self.controller = controller
-        
-        header = ttk.Frame(self)
-        header.pack(fill="x", padx=25, pady=(20, 10))
-
-        ttk.Label(header, text="Historial de Compras", style="Title.TLabel").pack(anchor="w")
-        ttk.Label(header, text="Consulta visual del historial de compras realizadas por los usuarios.", style="Subtitle.TLabel").pack(anchor="w")
-
-        card = ttk.Frame(self, style="Card.TFrame")
-        card.pack(fill="x", padx=25, pady=10)
-
-        campos = [
-            ("ID Historial", 0, 0),
-            ("ID Usuario", 0, 2),
-            ("ID Compra", 1, 0),
-            ("Acción", 1, 2),
-            ("Descripción", 2, 0),
-            ("Fecha", 2, 2),
-        ]
-
-        for texto, fila, columna in campos:
-            ttk.Label(card, text=texto).grid(row=fila, column=columna, padx=15, pady=12, sticky="w")
-            ttk.Entry(card, width=32).grid(row=fila, column=columna + 1, padx=15, pady=12)
-
-        botones = ttk.Frame(self)
-        botones.pack(fill="x", padx=25, pady=10)
-
-        ttk.Button(botones, text="Registrar").pack(side="left", padx=5)
-        ttk.Button(botones, text="Editar").pack(side="left", padx=5)
-        ttk.Button(botones, text="Eliminar").pack(side="left", padx=5)
-        ttk.Button(botones, text="Buscar").pack(side="left", padx=5)
-        ttk.Button(botones, text="Limpiar").pack(side="left", padx=5)
-
-        tabla_frame = ttk.Frame(self)
-        tabla_frame.pack(fill="both", expand=True, padx=25, pady=10)
-
-        tabla = ttk.Treeview(
-            tabla_frame,
-            columns=("id_historial", "id_usuario", "id_compra", "accion", "descripcion", "fecha"),
-            show="headings"
-        )
-
-        encabezados = {
-            "id_historial": "ID Historial",
-            "id_usuario": "ID Usuario",
-            "id_compra": "ID Compra",
-            "accion": "Acción",
-            "descripcion": "Descripción",
-            "fecha": "Fecha"
-        }
-
-        for columna, texto in encabezados.items():
-            tabla.heading(columna, text=texto)
-            tabla.column(columna, width=160)
-
-        scroll = ttk.Scrollbar(tabla_frame, orient="vertical", command=tabla.yview)
-        tabla.configure(yscrollcommand=scroll.set)
-
-        tabla.pack(side="left", fill="both", expand=True)
-        scroll.pack(side="right", fill="y")
+        root = page(self, "Historial de compras", "Registro de acciones, pedidos y trazabilidad de los usuarios.")
+        buttons = ttk.Frame(root, style="Main.TFrame"); buttons.pack(fill="x", pady=(0, 12))
+        ttk.Button(buttons, text="Actualizar", style="Primary.TButton", command=self.controller.load_history).pack(side="left", padx=4)
+        ttk.Label(buttons, text="ID usuario:", background="#eef2f7").pack(side="left", padx=(25,4))
+        self.id_usuario = ttk.Entry(buttons, width=30); self.id_usuario.pack(side="left")
+        ttk.Button(buttons, text="Filtrar", command=self.controller.filter_by_user).pack(side="left", padx=4)
+        table_card = card(root, padding=12); table_card.pack(fill="both", expand=True)
+        self.tabla = ttk.Treeview(table_card, columns=("id", "usuario", "pedido", "accion", "descripcion", "fecha"), show="headings")
+        headers = {"id":"ID", "usuario":"Usuario", "pedido":"Pedido", "accion":"Acción", "descripcion":"Descripción", "fecha":"Fecha"}
+        for col, text in headers.items(): self.tabla.heading(col, text=text); self.tabla.column(col, width=130)
+        self.tabla.column("descripcion", width=420)
+        self.tabla.pack(fill="both", expand=True)

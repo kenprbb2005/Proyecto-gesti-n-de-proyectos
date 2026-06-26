@@ -1,0 +1,144 @@
+from copy import deepcopy
+from typing import List, Optional
+
+from models.pedido import Pedido
+from models.base import now_iso
+from repositories.pedido_repository import PedidoRepository
+from services.carrito_service import CarritoService
+from services.producto_service import ProductoService
+from services.historial_service import HistorialService
+from services.notificacion_service import NotificacionService
+
+
+class PedidoService:
+    ESTADOS_VALIDOS = ["Pendiente", "Pagado", "Preparando", "Enviado", "Entregado", "Cancelado"]
+    COSTOS_ENVIO = {
+        "San José": 2500,
+        "Alajuela": 3000,
+        "Cartago": 3000,
+        "Heredia": 2800,
+        "Guanacaste": 4500,
+        "Puntarenas": 4500,
+        "Limón": 4500,
+    }
+
+    def __init__(
+        self,
+        pedido_repository: Optional[PedidoRepository] = None,
+        carrito_service: Optional[CarritoService] = None,
+        producto_service: Optional[ProductoService] = None,
+        historial_service: Optional[HistorialService] = None,
+        notificacion_service: Optional[NotificacionService] = None,
+    ):
+        self.pedido_repository = pedido_repository or PedidoRepository()
+        self.carrito_service = carrito_service or CarritoService()
+        self.producto_service = producto_service or ProductoService()
+        self.historial_service = historial_service or HistorialService()
+        self.notificacion_service = notificacion_service or NotificacionService()
+
+    def listar_pedidos(self) -> List[Pedido]:
+        return sorted(self.pedido_repository.find_all(), key=lambda p: p.fecha_creacion, reverse=True)
+
+    def listar_por_usuario(self, id_usuario: str) -> List[Pedido]:
+        return sorted(self.pedido_repository.find_by_usuario(id_usuario), key=lambda p: p.fecha_creacion, reverse=True)
+
+    def obtener(self, id_pedido: str) -> Optional[Pedido]:
+        return self.pedido_repository.find_by_id(id_pedido)
+
+    def crear_desde_carrito(self, id_usuario: str, canton_envio: str, direccion_envio: str) -> Pedido:
+        carrito = self.carrito_service.obtener_carrito_activo(id_usuario)
+        if not carrito.items:
+            raise ValueError("El carrito está vacío.")
+        if not canton_envio:
+            raise ValueError("Debes seleccionar un cantón o provincia de envío.")
+        if not direccion_envio.strip():
+            raise ValueError("La dirección de envío es obligatoria.")
+
+        items_a_comprar = self.carrito_service.obtener_items_seleccionados(carrito)
+        if not items_a_comprar:
+            raise ValueError("Selecciona al menos un producto del carrito para crear la compra.")
+
+        # Regla: validar stock solo de los productos marcados para compra.
+        for item in items_a_comprar:
+            producto = self.producto_service.obtener_producto(item["id_producto"])
+            if not producto or producto.estado != "Disponible":
+                raise ValueError(f"El producto {item['nombre']} ya no está disponible.")
+            if int(item["cantidad"]) > producto.stock:
+                raise ValueError(f"No hay stock suficiente para {item['nombre']}.")
+
+        # Regla: descontar stock al confirmar pedido para evitar sobreventa.
+        for item in items_a_comprar:
+            self.producto_service.descontar_stock(item["id_producto"], int(item["cantidad"]))
+
+        subtotal = round(sum(float(item["subtotal"]) for item in items_a_comprar), 2)
+        impuesto = round(subtotal * 0.13, 2)
+        envio = float(self.COSTOS_ENVIO.get(canton_envio, 3500))
+        total = round(subtotal + impuesto + envio, 2)
+
+        pedido = Pedido(
+            id_usuario=id_usuario,
+            items=deepcopy(items_a_comprar),
+            subtotal=subtotal,
+            impuesto=impuesto,
+            envio=envio,
+            total=total,
+            canton_envio=canton_envio,
+            direccion_envio=direccion_envio.strip(),
+            estado="Pendiente",
+        )
+        pedido = self.pedido_repository.save(pedido)
+
+        # Solo se quitan del carrito los productos comprados. Los demás quedan para después.
+        self.carrito_service.finalizar_items_comprados(
+            carrito.id_carrito,
+            [item["id_producto"] for item in items_a_comprar],
+        )
+
+        self.historial_service.registrar(
+            id_usuario,
+            "Pedido creado",
+            f"Se creó el pedido {pedido.id_pedido} por ₡{pedido.total:,.2f}.",
+            pedido.id_pedido,
+        )
+        self.notificacion_service.crear(
+            id_usuario,
+            "Pedido creado",
+            f"Tu pedido {pedido.id_pedido} fue creado correctamente.",
+            "Pedido",
+        )
+        return pedido
+
+    def cambiar_estado(self, id_pedido: str, estado: str) -> Pedido:
+        pedido = self._obtener_o_error(id_pedido)
+        if estado not in self.ESTADOS_VALIDOS:
+            raise ValueError("El estado del pedido no es válido.")
+        if pedido.estado == "Cancelado":
+            raise ValueError("No se puede cambiar un pedido cancelado.")
+        if pedido.estado == "Entregado" and estado != "Entregado":
+            raise ValueError("Un pedido entregado no debe devolverse a estados anteriores.")
+        pedido.estado = estado
+        pedido.fecha_actualizacion = now_iso()
+        pedido = self.pedido_repository.save(pedido)
+        self.historial_service.registrar(pedido.id_usuario, "Estado de pedido", f"El pedido {pedido.id_pedido} cambió a {estado}.", pedido.id_pedido)
+        self.notificacion_service.crear(pedido.id_usuario, "Actualización de pedido", f"Tu pedido {pedido.id_pedido} ahora está: {estado}.", "Pedido")
+        return pedido
+
+    def cancelar(self, id_pedido: str) -> Pedido:
+        pedido = self._obtener_o_error(id_pedido)
+        if pedido.estado in ["Enviado", "Entregado"]:
+            raise ValueError("No se puede cancelar un pedido enviado o entregado.")
+        if pedido.estado != "Cancelado":
+            for item in pedido.items:
+                self.producto_service.aumentar_stock(item["id_producto"], int(item["cantidad"]))
+        pedido.estado = "Cancelado"
+        pedido.fecha_actualizacion = now_iso()
+        pedido = self.pedido_repository.save(pedido)
+        self.historial_service.registrar(pedido.id_usuario, "Pedido cancelado", f"Se canceló el pedido {pedido.id_pedido} y se restauró el stock.", pedido.id_pedido)
+        self.notificacion_service.crear(pedido.id_usuario, "Pedido cancelado", f"Tu pedido {pedido.id_pedido} fue cancelado.", "Pedido")
+        return pedido
+
+    def _obtener_o_error(self, id_pedido: str) -> Pedido:
+        pedido = self.pedido_repository.find_by_id(id_pedido)
+        if not pedido:
+            raise ValueError("No existe un pedido con ese ID.")
+        return pedido

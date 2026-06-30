@@ -1,1 +1,56 @@
-[]
+[
+    {
+        "id_notificacion": "4EFB401FF3",
+        "id_usuario": "USR002",
+        "titulo": "Pedido registrado",
+        "mensaje": "Tu pedido 5B74F9956B fue registrado. Continúa con el proceso de pago.",
+        "tipo": "Pedido",
+        "leida": false,
+        "fecha": "2026-06-30 13:32:53"
+    },
+    {
+        "id_notificacion": "850B348B6A",
+        "id_usuario": "USR002",
+        "titulo": "Actualización de pedido",
+        "mensaje": "Tu pedido 5B74F9956B ahora está: Pagado.",
+        "tipo": "Pedido",
+        "leida": false,
+        "fecha": "2026-06-30 13:33:11"
+    },
+    {
+        "id_notificacion": "5641EA1F62",
+        "id_usuario": "USR002",
+        "titulo": "Pago aprobado",
+        "mensaje": "Pago simulado aprobado correctamente.",
+        "tipo": "Pago",
+        "leida": false,
+        "fecha": "2026-06-30 13:33:11"
+    },
+    {
+        "id_notificacion": "DA55467647",
+        "id_usuario": "USR002",
+        "titulo": "Pedido registrado",
+        "mensaje": "Tu pedido 4239D77C17 fue registrado. Continúa con el proceso de pago.",
+        "tipo": "Pedido",
+        "leida": false,
+        "fecha": "2026-06-30 14:18:24"
+    },
+    {
+        "id_notificacion": "AD080BDE90",
+        "id_usuario": "USR002",
+        "titulo": "Actualización de pedido",
+        "mensaje": "Tu pedido 4239D77C17 ahora está: Pagado.",
+        "tipo": "Pedido",
+        "leida": false,
+        "fecha": "2026-06-30 14:18:58"
+    },
+    {
+        "id_notificacion": "4CD8588323",
+        "id_usuario": "USR002",
+        "titulo": "Pago aprobado",
+        "mensaje": "Pago simulado aprobado correctamente.",
+        "tipo": "Pago",
+        "leida": false,
+        "fecha": "2026-06-30 14:18:58"
+    }
+]

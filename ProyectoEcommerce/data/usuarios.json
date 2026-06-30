@@ -1,16 +1,16 @@
 [
     {
         "id_usuario": "USR001",
-        "nombre": "Administrador Demo",
+        "nombre": "Administrador",
         "correo": "admin@demo.com",
-        "contrasena": "admin123",
+        "contrasena": "654321",
         "rol": "Administrador",
         "estado": "Activo",
         "fecha_registro": "2026-06-23 12:00:00"
     },
     {
         "id_usuario": "USR002",
-        "nombre": "Cliente Demo",
+        "nombre": "Cliente",
         "correo": "cliente@demo.com",
         "contrasena": "123456",
         "rol": "Cliente",

@@ -10,7 +10,7 @@ class CarritoView(ttk.Frame):
         root = page(
             self,
             "Carrito de compras",
-            "Marca los productos que sí quieres comprar ahora. Los no marcados quedan guardados para después.",
+            "Selecciona productos del catálogo, márcalos aquí y procesa un pedido. El pago se realiza después desde Pedidos/Pagos.",
         )
 
         top = ttk.Frame(root, style="Main.TFrame")
@@ -26,23 +26,27 @@ class CarritoView(ttk.Frame):
 
         ttk.Label(
             left,
-            text="Doble clic sobre un producto para marcarlo o quitarlo de la compra.",
+            text="Doble clic sobre un producto para marcarlo o quitarlo del pedido.",
             style="Field.TLabel",
         ).pack(anchor="w", pady=(0, 8))
 
+        table_area = ttk.Frame(left, style="Card.TFrame")
+        table_area.pack(fill="both", expand=True)
+
         self.tabla = ttk.Treeview(
-            left,
-            columns=("comprar", "id", "producto", "cantidad", "precio", "subtotal"),
+            table_area,
+            columns=("comprar", "id", "producto", "cantidad", "precio", "subtotal", "estado_stock"),
             show="headings",
             selectmode="extended",
         )
         encabezados = {
-            "comprar": "Comprar",
+            "comprar": "Pedido",
             "id": "ID producto",
             "producto": "Producto",
             "cantidad": "Cantidad",
             "precio": "Precio",
             "subtotal": "Subtotal",
+            "estado_stock": "Estado stock",
         }
         for col, text in encabezados.items():
             self.tabla.heading(col, text=text)
@@ -51,7 +55,17 @@ class CarritoView(ttk.Frame):
         self.tabla.column("id", width=110)
         self.tabla.column("producto", width=260)
         self.tabla.column("cantidad", width=90, anchor="center")
-        self.tabla.pack(fill="both", expand=True)
+        self.tabla.column("estado_stock", width=160)
+
+        scroll_y = ttk.Scrollbar(table_area, orient="vertical", command=self.tabla.yview)
+        scroll_x = ttk.Scrollbar(table_area, orient="horizontal", command=self.tabla.xview)
+        self.tabla.configure(yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set)
+        self.tabla.grid(row=0, column=0, sticky="nsew")
+        scroll_y.grid(row=0, column=1, sticky="ns")
+        scroll_x.grid(row=1, column=0, sticky="ew")
+        table_area.rowconfigure(0, weight=1)
+        table_area.columnconfigure(0, weight=1)
+
         self.tabla.bind("<Double-1>", self.controller.toggle_selected_purchase_event)
         self.tabla.bind("<space>", self.controller.toggle_selected_purchase_event)
 
@@ -63,16 +77,16 @@ class CarritoView(ttk.Frame):
 
         select_buttons = ttk.Frame(left, style="Card.TFrame")
         select_buttons.pack(fill="x", pady=(8, 0))
-        ttk.Button(select_buttons, text="Marcar seleccionado", style="Success.TButton", command=lambda: self.controller.mark_selected_for_purchase(True)).pack(side="left", padx=4)
-        ttk.Button(select_buttons, text="Quitar seleccionado", command=lambda: self.controller.mark_selected_for_purchase(False)).pack(side="left", padx=4)
-        ttk.Button(select_buttons, text="Marcar todos", command=lambda: self.controller.mark_all_for_purchase(True)).pack(side="left", padx=4)
-        ttk.Button(select_buttons, text="Quitar todos", command=lambda: self.controller.mark_all_for_purchase(False)).pack(side="left", padx=4)
+        ttk.Button(select_buttons, text="Incluir seleccionado", style="Success.TButton", command=lambda: self.controller.mark_selected_for_purchase(True)).pack(side="left", padx=4)
+        ttk.Button(select_buttons, text="No incluir seleccionado", command=lambda: self.controller.mark_selected_for_purchase(False)).pack(side="left", padx=4)
+        ttk.Button(select_buttons, text="Incluir todos", command=lambda: self.controller.mark_all_for_purchase(True)).pack(side="left", padx=4)
+        ttk.Button(select_buttons, text="No incluir todos", command=lambda: self.controller.mark_all_for_purchase(False)).pack(side="left", padx=4)
 
         right = card(body, padding=16)
         right.pack(side="right", fill="y")
-        ttk.Label(right, text="Resumen de productos marcados", style="Title.TLabel").pack(anchor="w", pady=(0, 12))
+        ttk.Label(right, text="Resumen del pedido", style="Title.TLabel").pack(anchor="w", pady=(0, 12))
 
-        self.info_lbl = ttk.Label(right, text="Productos seleccionados: 0")
+        self.info_lbl = ttk.Label(right, text="Carrito: 0 productos | Para pedido: 0")
         self.info_lbl.pack(anchor="w", pady=5)
         self.subtotal_lbl = ttk.Label(right, text="Subtotal: ₡0.00")
         self.subtotal_lbl.pack(anchor="w", pady=5)
@@ -94,37 +108,22 @@ class CarritoView(ttk.Frame):
         self.direccion = ttk.Entry(right, width=34)
         self.direccion.pack(anchor="w", pady=5)
 
-        ttk.Label(right, text="Método de pago simulado", style="Field.TLabel").pack(anchor="w", pady=(8, 0))
-        self.metodo_pago = ttk.Combobox(
-            right,
-            values=["Tarjeta", "SINPE Móvil", "Transferencia", "Efectivo"],
-            width=28,
-            state="readonly",
-        )
-        self.metodo_pago.set("SINPE Móvil")
-        self.metodo_pago.pack(anchor="w", pady=5)
-
-        ttk.Label(right, text="Referencia del pago", style="Field.TLabel").pack(anchor="w", pady=(8, 0))
-        self.referencia_pago = ttk.Entry(right, width=34)
-        self.referencia_pago.insert(0, "SIMULADO-001")
-        self.referencia_pago.pack(anchor="w", pady=5)
-        ttk.Label(
-            right,
-            text="Nota: si la referencia termina en 0000, el pago se rechaza para probar la regla de negocio.",
-            wraplength=260,
-        ).pack(anchor="w", pady=(2, 8))
-
         self.envio_lbl = ttk.Label(right, text="Envío: ₡0.00")
         self.envio_lbl.pack(anchor="w", pady=5)
-        self.total_lbl = ttk.Label(right, text="Total: ₡0.00", font=("Segoe UI", 16, "bold"))
+        self.total_lbl = ttk.Label(right, text="Total del pedido: ₡0.00", font=("Segoe UI", 16, "bold"))
         self.total_lbl.pack(anchor="w", pady=(18, 8))
 
-        ttk.Button(right, text="Comprar productos marcados", style="Success.TButton", command=self.controller.checkout_and_pay).pack(fill="x", pady=5)
-        ttk.Button(right, text="Crear pedido con productos marcados", style="Primary.TButton", command=self.controller.checkout).pack(fill="x", pady=5)
+        ttk.Label(
+            right,
+            text="Regla de negocio: este botón NO cobra. Registra el pedido en la tabla Pedidos; el cobro se hace después en Pagos.",
+            wraplength=270,
+        ).pack(anchor="w", pady=(0, 8))
 
-    def set_totals(self, subtotal, impuesto, envio, total, cantidad_seleccionada=0):
-        self.info_lbl.config(text=f"Productos seleccionados: {cantidad_seleccionada}")
+        ttk.Button(right, text="Procesar pedido", style="Success.TButton", command=self.controller.procesar_pedido).pack(fill="x", pady=5)
+
+    def set_totals(self, subtotal, impuesto, envio, total, cantidad_seleccionada=0, cantidad_carrito=0):
+        self.info_lbl.config(text=f"Carrito: {cantidad_carrito} productos | Para pedido: {cantidad_seleccionada}")
         self.subtotal_lbl.config(text=f"Subtotal: {money(subtotal)}")
         self.impuesto_lbl.config(text=f"IVA 13%: {money(impuesto)}")
         self.envio_lbl.config(text=f"Envío: {money(envio)}")
-        self.total_lbl.config(text=f"Total: {money(total)}")
+        self.total_lbl.config(text=f"Total del pedido: {money(total)}")

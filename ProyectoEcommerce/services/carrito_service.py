@@ -10,10 +10,12 @@ from services.producto_service import ProductoService
 class CarritoService:
     """Reglas de negocio del carrito de compras.
 
-    El carrito permite tener varios productos agregados, pero no todos tienen que
-    comprarse en la misma operación. Cada item tiene el campo `seleccionado`:
-    - True: se incluye en el pedido/compra.
-    - False: queda guardado en el carrito para comprarlo después.
+    Flujo correcto del negocio:
+    catálogo -> carrito -> pedido registrado -> proceso de pago.
+
+    El carrito solamente prepara los productos. El pedido se crea desde el
+    carrito y queda registrado en pedidos.json. Luego ese pedido se envía al
+    módulo de pagos.
     """
 
     def __init__(
@@ -25,6 +27,8 @@ class CarritoService:
         self.producto_service = producto_service or ProductoService()
 
     def obtener_carrito_activo(self, id_usuario: str) -> Carrito:
+        if not id_usuario:
+            raise ValueError("Debes iniciar sesión para usar el carrito.")
         carrito = self.carrito_repository.find_activo_by_usuario(id_usuario)
         if not carrito:
             return self.carrito_repository.save(Carrito(id_usuario=id_usuario))
@@ -46,12 +50,12 @@ class CarritoService:
         existente = None
 
         for item in items:
-            if item["id_producto"] == id_producto:
+            if str(item.get("id_producto")) == str(id_producto):
                 existente = item
                 break
 
         cantidad_actual = int(existente.get("cantidad", 0)) if existente else 0
-        if cantidad_actual + cantidad > producto.stock:
+        if cantidad_actual + cantidad > int(producto.stock):
             raise ValueError("No puedes agregar más unidades que el stock disponible.")
 
         if existente:
@@ -84,16 +88,17 @@ class CarritoService:
             raise ValueError("El producto no existe.")
         if cantidad <= 0:
             return self.eliminar_producto(id_usuario, id_producto)
-        if cantidad > producto.stock:
+        if cantidad > int(producto.stock):
             raise ValueError("La cantidad supera el stock disponible.")
 
         encontrado = False
         for item in carrito.items:
-            if item["id_producto"] == id_producto:
+            if str(item.get("id_producto")) == str(id_producto):
                 item["cantidad"] = cantidad
                 item["precio_unitario"] = float(producto.precio)
                 item["nombre"] = producto.nombre
                 item["subtotal"] = round(cantidad * item["precio_unitario"], 2)
+                item["seleccionado"] = bool(item.get("seleccionado", True))
                 encontrado = True
                 break
 
@@ -108,7 +113,7 @@ class CarritoService:
         encontrado = False
 
         for item in carrito.items:
-            if item["id_producto"] == id_producto:
+            if str(item.get("id_producto")) == str(id_producto):
                 item["seleccionado"] = bool(seleccionado)
                 encontrado = True
                 break
@@ -124,7 +129,7 @@ class CarritoService:
         encontrado = False
 
         for item in carrito.items:
-            if item["id_producto"] == id_producto:
+            if str(item.get("id_producto")) == str(id_producto):
                 item["seleccionado"] = not bool(item.get("seleccionado", True))
                 encontrado = True
                 break
@@ -145,9 +150,56 @@ class CarritoService:
     def obtener_items_seleccionados(self, carrito: Carrito) -> List[dict]:
         return [deepcopy(item) for item in carrito.items if bool(item.get("seleccionado", True))]
 
+    def obtener_items_detallados(self, carrito: Carrito, solo_seleccionados: bool = False) -> List[dict]:
+        """Devuelve items del carrito resolviendo cada ID contra productos.json.
+
+        Esto corrige el problema visual donde el carrito tenía el id_producto,
+        pero la tabla no mostraba nombre/precio porque no se estaban consultando
+        los datos reales del catálogo.
+        """
+        base_items = self.obtener_items_seleccionados(carrito) if solo_seleccionados else deepcopy(carrito.items)
+        detallados = []
+
+        for item in base_items:
+            id_producto = str(item.get("id_producto", "")).strip()
+            producto = self.producto_service.obtener_producto(id_producto)
+            cantidad = int(item.get("cantidad", 1))
+            seleccionado = bool(item.get("seleccionado", True))
+
+            if producto:
+                precio = float(producto.precio)
+                detallados.append({
+                    "id_producto": producto.id_producto,
+                    "nombre": producto.nombre,
+                    "categoria": producto.categoria,
+                    "marca": producto.marca,
+                    "cantidad": cantidad,
+                    "precio_unitario": precio,
+                    "subtotal": round(cantidad * precio, 2),
+                    "seleccionado": seleccionado,
+                    "stock_actual": int(producto.stock),
+                    "estado_producto": producto.estado,
+                })
+            else:
+                precio = float(item.get("precio_unitario", 0))
+                detallados.append({
+                    "id_producto": id_producto,
+                    "nombre": item.get("nombre", "Producto no encontrado"),
+                    "categoria": "-",
+                    "marca": "-",
+                    "cantidad": cantidad,
+                    "precio_unitario": precio,
+                    "subtotal": round(cantidad * precio, 2),
+                    "seleccionado": seleccionado,
+                    "stock_actual": 0,
+                    "estado_producto": "No encontrado",
+                })
+
+        return detallados
+
     def eliminar_producto(self, id_usuario: str, id_producto: str) -> Carrito:
         carrito = self.obtener_carrito_activo(id_usuario)
-        carrito.items = [item for item in carrito.items if item["id_producto"] != id_producto]
+        carrito.items = [item for item in carrito.items if str(item.get("id_producto")) != str(id_producto)]
         carrito.fecha_actualizacion = now_iso()
         return self.carrito_repository.save(carrito)
 
@@ -158,7 +210,7 @@ class CarritoService:
         return self.carrito_repository.save(carrito)
 
     def totalizar(self, carrito: Carrito, solo_seleccionados: bool = False) -> dict:
-        items = self.obtener_items_seleccionados(carrito) if solo_seleccionados else carrito.items
+        items = self.obtener_items_detallados(carrito, solo_seleccionados=solo_seleccionados)
         subtotal = round(sum(float(item.get("subtotal", 0)) for item in items), 2)
         impuesto = round(subtotal * 0.13, 2)
         return {
@@ -169,7 +221,7 @@ class CarritoService:
         }
 
     def finalizar_items_comprados(self, id_carrito: str, ids_productos_comprados: List[str]) -> Carrito:
-        """Quita del carrito los productos comprados y deja los demás activos."""
+        """Quita del carrito los productos que ya fueron convertidos en pedido."""
         carrito = self.carrito_repository.find_by_id(id_carrito)
         if not carrito:
             raise ValueError("No existe el carrito.")
@@ -189,7 +241,7 @@ class CarritoService:
         return self.carrito_repository.save(carrito)
 
     def restaurar_items(self, id_usuario: str, items_a_restaurar: List[dict]) -> Carrito:
-        """Devuelve items al carrito activo, usado cuando falla un pago simulado."""
+        """Devuelve items al carrito activo. Se usa al cancelar/revertir una operación."""
         carrito = self.obtener_carrito_activo(id_usuario)
 
         for item_restaurado in items_a_restaurar:
@@ -199,7 +251,7 @@ class CarritoService:
 
             existente = None
             for item in carrito.items:
-                if item.get("id_producto") == id_producto:
+                if str(item.get("id_producto")) == str(id_producto):
                     existente = item
                     break
 
@@ -233,12 +285,23 @@ class CarritoService:
             if "seleccionado" not in item:
                 item["seleccionado"] = True
                 cambiado = True
+
+            producto = self.producto_service.obtener_producto(str(item.get("id_producto", "")))
+            if producto:
+                if item.get("nombre") != producto.nombre:
+                    item["nombre"] = producto.nombre
+                    cambiado = True
+                if float(item.get("precio_unitario", 0)) != float(producto.precio):
+                    item["precio_unitario"] = float(producto.precio)
+                    cambiado = True
+
             cantidad = int(item.get("cantidad", 1))
             precio = float(item.get("precio_unitario", 0))
             subtotal = round(cantidad * precio, 2)
-            if item.get("subtotal") != subtotal:
+            if float(item.get("subtotal", -1)) != subtotal:
                 item["subtotal"] = subtotal
                 cambiado = True
+
         if cambiado:
             carrito.fecha_actualizacion = now_iso()
             return self.carrito_repository.save(carrito)

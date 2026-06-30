@@ -1,10 +1,26 @@
 [
     {
-        "id_carrito": "0D2B8A7480",
+        "id_carrito": "FDE0654A35",
+        "id_usuario": "USR002",
+        "items": [],
+        "estado": "Convertido",
+        "fecha_creacion": "2026-06-30 13:32:12",
+        "fecha_actualizacion": "2026-06-30 13:32:53"
+    },
+    {
+        "id_carrito": "1895EFF492",
+        "id_usuario": "USR002",
+        "items": [],
+        "estado": "Convertido",
+        "fecha_creacion": "2026-06-30 13:32:53",
+        "fecha_actualizacion": "2026-06-30 14:18:24"
+    },
+    {
+        "id_carrito": "9FC63B74C4",
         "id_usuario": "USR002",
         "items": [],
         "estado": "Activo",
-        "fecha_creacion": "2026-06-23 16:07:19",
-        "fecha_actualizacion": "2026-06-23 16:07:41"
+        "fecha_creacion": "2026-06-30 14:18:24",
+        "fecha_actualizacion": "2026-06-30 14:18:24"
     }
 ]

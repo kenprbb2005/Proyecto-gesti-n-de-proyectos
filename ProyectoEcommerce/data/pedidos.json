@@ -1,1 +1,59 @@
-[]
+[
+    {
+        "id_pedido": "5B74F9956B",
+        "id_usuario": "USR002",
+        "items": [
+            {
+                "id_producto": "PROD003",
+                "nombre": "Botella térmica",
+                "categoria": "Hogar",
+                "marca": "CasaPlus",
+                "cantidad": 2,
+                "precio_unitario": 7200.0,
+                "subtotal": 14400.0
+            }
+        ],
+        "subtotal": 14400.0,
+        "impuesto": 1872.0,
+        "envio": 2500.0,
+        "total": 18772.0,
+        "canton_envio": "San José",
+        "direccion_envio": "dssads",
+        "estado": "Pagado",
+        "fecha_creacion": "2026-06-30 13:32:53",
+        "fecha_actualizacion": "2026-06-30 13:33:11"
+    },
+    {
+        "id_pedido": "4239D77C17",
+        "id_usuario": "USR002",
+        "items": [
+            {
+                "id_producto": "PROD001",
+                "nombre": "Audífonos Bluetooth",
+                "categoria": "Tecnología",
+                "marca": "SoundPro",
+                "cantidad": 7,
+                "precio_unitario": 18500.0,
+                "subtotal": 129500.0
+            },
+            {
+                "id_producto": "PROD003",
+                "nombre": "Botella térmica",
+                "categoria": "Hogar",
+                "marca": "CasaPlus",
+                "cantidad": 2,
+                "precio_unitario": 7200.0,
+                "subtotal": 14400.0
+            }
+        ],
+        "subtotal": 143900.0,
+        "impuesto": 18707.0,
+        "envio": 2500.0,
+        "total": 165107.0,
+        "canton_envio": "San José",
+        "direccion_envio": "Ucr",
+        "estado": "Pagado",
+        "fecha_creacion": "2026-06-30 14:18:24",
+        "fecha_actualizacion": "2026-06-30 14:18:58"
+    }
+]

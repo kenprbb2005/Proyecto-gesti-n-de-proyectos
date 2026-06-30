@@ -11,6 +11,15 @@ from services.notificacion_service import NotificacionService
 
 
 class PedidoService:
+    """Reglas de negocio para pedidos.
+
+    Norma del negocio aplicada:
+    1. El carrito no registra pagos.
+    2. El carrito procesa un pedido con los productos marcados.
+    3. El pedido se guarda en pedidos.json y aparece en la tabla de pedidos.
+    4. Desde pedidos se envía al módulo de pagos.
+    """
+
     ESTADOS_VALIDOS = ["Pendiente", "Pagado", "Preparando", "Enviado", "Entregado", "Cancelado"]
     COSTOS_ENVIO = {
         "San José": 2500,
@@ -46,38 +55,53 @@ class PedidoService:
         return self.pedido_repository.find_by_id(id_pedido)
 
     def crear_desde_carrito(self, id_usuario: str, canton_envio: str, direccion_envio: str) -> Pedido:
+        if not id_usuario:
+            raise ValueError("Debes iniciar sesión antes de crear un pedido.")
+
         carrito = self.carrito_service.obtener_carrito_activo(id_usuario)
         if not carrito.items:
             raise ValueError("El carrito está vacío.")
         if not canton_envio:
-            raise ValueError("Debes seleccionar un cantón o provincia de envío.")
+            raise ValueError("Debes seleccionar una provincia de envío.")
         if not direccion_envio.strip():
             raise ValueError("La dirección de envío es obligatoria.")
 
-        items_a_comprar = self.carrito_service.obtener_items_seleccionados(carrito)
+        items_a_comprar = self.carrito_service.obtener_items_detallados(carrito, solo_seleccionados=True)
         if not items_a_comprar:
-            raise ValueError("Selecciona al menos un producto del carrito para crear la compra.")
+            raise ValueError("Selecciona al menos un producto del carrito para procesar el pedido.")
 
-        # Regla: validar stock solo de los productos marcados para compra.
+        items_pedido = []
         for item in items_a_comprar:
             producto = self.producto_service.obtener_producto(item["id_producto"])
             if not producto or producto.estado != "Disponible":
                 raise ValueError(f"El producto {item['nombre']} ya no está disponible.")
-            if int(item["cantidad"]) > producto.stock:
+            if int(item["cantidad"]) > int(producto.stock):
                 raise ValueError(f"No hay stock suficiente para {item['nombre']}.")
 
-        # Regla: descontar stock al confirmar pedido para evitar sobreventa.
-        for item in items_a_comprar:
+            # El pedido conserva una fotografía del producto, precio y cantidad
+            # al momento de procesar el carrito.
+            items_pedido.append({
+                "id_producto": producto.id_producto,
+                "nombre": producto.nombre,
+                "categoria": producto.categoria,
+                "marca": producto.marca,
+                "cantidad": int(item["cantidad"]),
+                "precio_unitario": float(producto.precio),
+                "subtotal": round(int(item["cantidad"]) * float(producto.precio), 2),
+            })
+
+        # Se descuenta stock al crear el pedido porque el pedido reserva los productos.
+        for item in items_pedido:
             self.producto_service.descontar_stock(item["id_producto"], int(item["cantidad"]))
 
-        subtotal = round(sum(float(item["subtotal"]) for item in items_a_comprar), 2)
+        subtotal = round(sum(float(item["subtotal"]) for item in items_pedido), 2)
         impuesto = round(subtotal * 0.13, 2)
         envio = float(self.COSTOS_ENVIO.get(canton_envio, 3500))
         total = round(subtotal + impuesto + envio, 2)
 
         pedido = Pedido(
             id_usuario=id_usuario,
-            items=deepcopy(items_a_comprar),
+            items=deepcopy(items_pedido),
             subtotal=subtotal,
             impuesto=impuesto,
             envio=envio,
@@ -88,22 +112,22 @@ class PedidoService:
         )
         pedido = self.pedido_repository.save(pedido)
 
-        # Solo se quitan del carrito los productos comprados. Los demás quedan para después.
+        # Los productos ya procesados como pedido salen del carrito.
         self.carrito_service.finalizar_items_comprados(
             carrito.id_carrito,
-            [item["id_producto"] for item in items_a_comprar],
+            [item["id_producto"] for item in items_pedido],
         )
 
         self.historial_service.registrar(
             id_usuario,
-            "Pedido creado",
-            f"Se creó el pedido {pedido.id_pedido} por ₡{pedido.total:,.2f}.",
+            "Pedido registrado",
+            f"Se registró el pedido {pedido.id_pedido} por ₡{pedido.total:,.2f}. Pendiente de pago.",
             pedido.id_pedido,
         )
         self.notificacion_service.crear(
             id_usuario,
-            "Pedido creado",
-            f"Tu pedido {pedido.id_pedido} fue creado correctamente.",
+            "Pedido registrado",
+            f"Tu pedido {pedido.id_pedido} fue registrado. Continúa con el proceso de pago.",
             "Pedido",
         )
         return pedido

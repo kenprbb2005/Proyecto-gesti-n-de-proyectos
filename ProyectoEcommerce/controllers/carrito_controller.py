@@ -21,10 +21,12 @@ class CarritoController:
     def load_cart(self):
         try:
             carrito = self.app_controller.services.carrito_service.obtener_carrito_activo(self._user_id())
+            items = self.app_controller.services.carrito_service.obtener_items_detallados(carrito)
             clear_tree(self.view.tabla)
 
-            for item in carrito.items:
+            for item in items:
                 marcado = "✓ Sí" if bool(item.get("seleccionado", True)) else "— No"
+                estado_stock = self._estado_stock(item)
                 self.view.tabla.insert(
                     "",
                     "end",
@@ -36,6 +38,7 @@ class CarritoController:
                         item["cantidad"],
                         money(item["precio_unitario"]),
                         money(item["subtotal"]),
+                        estado_stock,
                     ),
                 )
 
@@ -49,9 +52,20 @@ class CarritoController:
                 envio if hay_seleccionados else 0,
                 total,
                 totals["cantidad_items"],
+                len(items),
             )
         except Exception as e:
             messagebox.showerror("Error", str(e))
+
+    @staticmethod
+    def _estado_stock(item):
+        if item.get("estado_producto") != "Disponible":
+            return item.get("estado_producto", "No disponible")
+        cantidad = int(item.get("cantidad", 0))
+        stock = int(item.get("stock_actual", 0))
+        if cantidad > stock:
+            return f"Stock insuficiente ({stock})"
+        return f"Disponible ({stock})"
 
     def _selected_product_ids(self):
         selected = self.view.tabla.selection()
@@ -65,6 +79,7 @@ class CarritoController:
     def change_quantity(self, delta):
         values = get_selected_values(self.view.tabla)
         if not values:
+            messagebox.showwarning("Carrito", "Selecciona un producto del carrito.")
             return
         try:
             id_producto = values[1]
@@ -92,8 +107,9 @@ class CarritoController:
 
     def empty_cart(self):
         try:
-            self.app_controller.services.carrito_service.vaciar(self._user_id())
-            self.load_cart()
+            if messagebox.askyesno("Carrito", "¿Deseas vaciar todo el carrito?"):
+                self.app_controller.services.carrito_service.vaciar(self._user_id())
+                self.load_cart()
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
@@ -141,49 +157,38 @@ class CarritoController:
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
-    def checkout(self):
-        """Crea un pedido pendiente solo con los productos marcados."""
+    def procesar_pedido(self):
+        """Norma del negocio: el carrito crea un pedido y lo registra en la tabla Pedidos."""
         try:
             pedido = self.app_controller.services.pedido_service.crear_desde_carrito(
                 self._user_id(),
                 self.view.canton.get(),
                 self.view.direccion.get(),
             )
-            messagebox.showinfo(
-                "Pedido creado",
-                f"Pedido {pedido.id_pedido} creado con los productos marcados. Total: {money(pedido.total)}",
-            )
             self.load_cart()
-            self.app_controller.show_view("pagos")
-            pagos_view = self.app_controller.controllers["pagos"].view
-            pagos_view.id_pedido.delete(0, "end")
-            pagos_view.id_pedido.insert(0, pedido.id_pedido)
-            pagos_view.monto.delete(0, "end")
-            pagos_view.monto.insert(0, str(pedido.total))
-            pagos_view.metodo.set(self.view.metodo_pago.get())
-            pagos_view.referencia.delete(0, "end")
-            pagos_view.referencia.insert(0, self.view.referencia_pago.get())
+            messagebox.showinfo(
+                "Pedido registrado",
+                f"Pedido {pedido.id_pedido} registrado correctamente.\n\n"
+                f"Total: {money(pedido.total)}\n"
+                "Estado: Pendiente de pago.\n\n"
+                "Ahora se abrirá la tabla de pedidos para continuar con el proceso de pago.",
+            )
+            pedidos_controller = self.app_controller.controllers["pedidos"]
+            pedidos_controller.pedido_enfocado = pedido.id_pedido
+            self.app_controller.show_view("pedidos")
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
+    # Alias por compatibilidad con versiones anteriores del botón.
+    def checkout(self):
+        self.procesar_pedido()
+
     def checkout_and_pay(self):
-        """Realiza compra completa solo con los productos marcados en el carrito."""
-        try:
-            pedido, pago = self.app_controller.services.checkout_service.realizar_compra(
-                self._user_id(),
-                self.view.canton.get(),
-                self.view.direccion.get(),
-                self.view.metodo_pago.get(),
-                self.view.referencia_pago.get(),
-            )
-            self.load_cart()
-            messagebox.showinfo(
-                "Compra realizada",
-                f"Compra finalizada correctamente.\n\nPedido: {pedido.id_pedido}\nPago: {pago.id_pago}\nTotal: {money(pedido.total)}",
-            )
-            self.app_controller.show_view("historial")
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
+        messagebox.showwarning(
+            "Flujo corregido",
+            "Según la norma del negocio, primero se procesa el pedido desde el carrito, luego se paga desde el módulo de pedidos/pagos.",
+        )
+        self.procesar_pedido()
 
     def go_to_catalogo(self):
         self.app_controller.show_view("catalogo")

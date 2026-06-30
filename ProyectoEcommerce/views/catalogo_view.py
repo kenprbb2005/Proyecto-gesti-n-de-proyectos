@@ -1,5 +1,4 @@
 from tkinter import ttk
-import tkinter as tk
 from utils.ui import page, card, money
 
 
@@ -7,7 +6,7 @@ class CatalogoView(ttk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, style="Main.TFrame")
         self.controller = controller
-        root = page(self, "Catálogo de productos", "Consulta productos, filtra por categoría y agrega al carrito.")
+        root = page(self, "Catálogo de productos", "Selecciona productos, agrégalos al carrito y después procesa el pedido.")
 
         header = ttk.Frame(root, style="Main.TFrame")
         header.pack(fill="x", pady=(0, 12))
@@ -40,14 +39,24 @@ class CatalogoView(ttk.Frame):
         tabla_card = card(body, padding=12)
         tabla_card.pack(side="left", fill="both", expand=True, padx=(0, 12))
         ttk.Label(tabla_card, text="Productos disponibles", style="Title.TLabel").pack(anchor="w", pady=(0, 10))
-        self.tabla = ttk.Treeview(tabla_card, columns=("id", "nombre", "categoria", "marca", "precio", "stock"), show="headings")
+
+        table_area = ttk.Frame(tabla_card, style="Card.TFrame")
+        table_area.pack(fill="both", expand=True)
+        self.tabla = ttk.Treeview(table_area, columns=("id", "nombre", "categoria", "marca", "precio", "stock"), show="headings")
         encabezados = {"id": "ID", "nombre": "Producto", "categoria": "Categoría", "marca": "Marca", "precio": "Precio", "stock": "Stock"}
         for col, text in encabezados.items():
             self.tabla.heading(col, text=text)
             self.tabla.column(col, width=120)
         self.tabla.column("nombre", width=230)
         self.tabla.column("id", width=90)
-        self.tabla.pack(fill="both", expand=True)
+        scroll_y = ttk.Scrollbar(table_area, orient="vertical", command=self.tabla.yview)
+        scroll_x = ttk.Scrollbar(table_area, orient="horizontal", command=self.tabla.xview)
+        self.tabla.configure(yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set)
+        self.tabla.grid(row=0, column=0, sticky="nsew")
+        scroll_y.grid(row=0, column=1, sticky="ns")
+        scroll_x.grid(row=1, column=0, sticky="ew")
+        table_area.rowconfigure(0, weight=1)
+        table_area.columnconfigure(0, weight=1)
         self.tabla.bind("<<TreeviewSelect>>", lambda e: self.controller.show_selected_detail())
 
         detalle = card(body, padding=14)
@@ -66,6 +75,7 @@ class CatalogoView(ttk.Frame):
         self.cantidad.set(1)
         self.cantidad.pack(anchor="w", pady=5)
         ttk.Button(detalle, text="Agregar al carrito", style="Success.TButton", command=self.controller.add_to_cart).pack(fill="x", pady=(14, 4))
+        ttk.Button(detalle, text="Agregar y abrir carrito", style="Primary.TButton", command=self.controller.add_to_cart_and_open).pack(fill="x", pady=4)
 
     def set_detail(self, producto=None):
         if not producto:

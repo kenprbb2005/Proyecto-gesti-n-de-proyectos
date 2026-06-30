@@ -9,6 +9,7 @@ class CatalogoController:
         self.app_controller = app_controller
         self.view = CatalogoView(app_controller.content_frame, self)
         self.product_cache = {}
+        self.selected_product_id = None
 
     def on_show(self):
         self.refresh_filters()
@@ -36,8 +37,15 @@ class CatalogoController:
             self.product_cache = {p.id_producto: p for p in productos}
             clear_tree(self.view.tabla)
             for p in productos:
-                self.view.tabla.insert("", "end", values=(p.id_producto, p.nombre, p.categoria, p.marca, money(p.precio), p.stock))
-            self.view.set_detail(None)
+                self.view.tabla.insert("", "end", iid=p.id_producto, values=(p.id_producto, p.nombre, p.categoria, p.marca, money(p.precio), p.stock))
+            if self.selected_product_id in self.product_cache:
+                self.view.tabla.selection_set(self.selected_product_id)
+                self.view.tabla.focus(self.selected_product_id)
+                self.view.tabla.see(self.selected_product_id)
+                self.view.set_detail(self.product_cache[self.selected_product_id])
+            else:
+                self.selected_product_id = None
+                self.view.set_detail(None)
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
@@ -52,24 +60,41 @@ class CatalogoController:
         values = get_selected_values(self.view.tabla)
         if not values:
             return
-        producto = self.product_cache.get(values[0])
+        self.selected_product_id = values[0]
+        producto = self.product_cache.get(self.selected_product_id)
         self.view.set_detail(producto)
 
-    def add_to_cart(self):
+    def _get_selected_product_id(self):
+        values = get_selected_values(self.view.tabla)
+        if values:
+            self.selected_product_id = values[0]
+        if not self.selected_product_id:
+            raise ValueError("Selecciona un producto de la tabla del catálogo.")
+        return self.selected_product_id
+
+    def add_to_cart(self, abrir_carrito=False):
         if not self.app_controller.current_user:
             messagebox.showwarning("Login requerido", "Debes iniciar sesión para agregar productos al carrito.")
             self.app_controller.show_view("login")
             return
-        values = get_selected_values(self.view.tabla)
-        if not values:
-            return
         try:
+            id_producto = self._get_selected_product_id()
             cantidad = int(self.view.cantidad.get())
-            self.app_controller.services.carrito_service.agregar_producto(self.app_controller.current_user.id_usuario, values[0], cantidad)
-            messagebox.showinfo("Carrito", "Producto agregado al carrito.")
+            carrito = self.app_controller.services.carrito_service.agregar_producto(
+                self.app_controller.current_user.id_usuario,
+                id_producto,
+                cantidad,
+            )
+            producto = self.app_controller.services.producto_service.obtener_producto(id_producto)
+            messagebox.showinfo("Carrito", f"{producto.nombre if producto else 'Producto'} agregado al carrito.")
             self.load_products()
+            if abrir_carrito:
+                self.app_controller.show_view("carrito")
         except Exception as e:
             messagebox.showerror("Error", str(e))
+
+    def add_to_cart_and_open(self):
+        self.add_to_cart(abrir_carrito=True)
 
     def go_to_login(self):
         self.app_controller.show_view("login")

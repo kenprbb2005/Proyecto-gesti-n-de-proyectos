@@ -1,1 +1,24 @@
-[]
+[
+    {
+        "id_pago": "8DE8C88B0E",
+        "id_pedido": "5B74F9956B",
+        "id_usuario": "USR002",
+        "metodo": "Tarjeta",
+        "monto": 18772.0,
+        "estado": "Aprobado",
+        "referencia": "PED-5B74F9956B",
+        "mensaje": "Pago simulado aprobado correctamente.",
+        "fecha_pago": "2026-06-30 13:33:11"
+    },
+    {
+        "id_pago": "9BB1CF6235",
+        "id_pedido": "4239D77C17",
+        "id_usuario": "USR002",
+        "metodo": "Transferencia",
+        "monto": 165107.0,
+        "estado": "Aprobado",
+        "referencia": "PED-4239D77C17",
+        "mensaje": "Pago simulado aprobado correctamente.",
+        "fecha_pago": "2026-06-30 14:18:58"
+    }
+]

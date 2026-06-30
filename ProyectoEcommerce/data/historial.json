@@ -1,1 +1,50 @@
-[]
+[
+    {
+        "id_historial": "1AAB3FE1B9",
+        "id_usuario": "USR002",
+        "id_pedido": "5B74F9956B",
+        "accion": "Pedido registrado",
+        "descripcion": "Se registró el pedido 5B74F9956B por ₡18,772.00. Pendiente de pago.",
+        "fecha": "2026-06-30 13:32:53"
+    },
+    {
+        "id_historial": "742EF8B767",
+        "id_usuario": "USR002",
+        "id_pedido": "5B74F9956B",
+        "accion": "Estado de pedido",
+        "descripcion": "El pedido 5B74F9956B cambió a Pagado.",
+        "fecha": "2026-06-30 13:33:11"
+    },
+    {
+        "id_historial": "4AD6CE9535",
+        "id_usuario": "USR002",
+        "id_pedido": "5B74F9956B",
+        "accion": "Pago",
+        "descripcion": "Pago aprobado para el pedido 5B74F9956B.",
+        "fecha": "2026-06-30 13:33:11"
+    },
+    {
+        "id_historial": "DF81E29DE6",
+        "id_usuario": "USR002",
+        "id_pedido": "4239D77C17",
+        "accion": "Pedido registrado",
+        "descripcion": "Se registró el pedido 4239D77C17 por ₡165,107.00. Pendiente de pago.",
+        "fecha": "2026-06-30 14:18:24"
+    },
+    {
+        "id_historial": "6042E00DA6",
+        "id_usuario": "USR002",
+        "id_pedido": "4239D77C17",
+        "accion": "Estado de pedido",
+        "descripcion": "El pedido 4239D77C17 cambió a Pagado.",
+        "fecha": "2026-06-30 14:18:58"
+    },
+    {
+        "id_historial": "F7EF711A69",
+        "id_usuario": "USR002",
+        "id_pedido": "4239D77C17",
+        "accion": "Pago",
+        "descripcion": "Pago aprobado para el pedido 4239D77C17.",
+        "fecha": "2026-06-30 14:18:58"
+    }
+]

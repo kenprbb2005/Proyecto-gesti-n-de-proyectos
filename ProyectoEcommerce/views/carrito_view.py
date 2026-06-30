@@ -129,3 +129,8 @@ class CarritoView(ttk.Frame):
         self.envio_lbl.config(text=f"Envío: {money(envio)}")
         self.total_lbl.config(text=f"Total: {money(total)}")
 
+        
+
+
+
+

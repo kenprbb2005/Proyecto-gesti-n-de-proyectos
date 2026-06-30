@@ -133,3 +133,5 @@ class CarritoView(ttk.Frame):
 
 
 
+
+

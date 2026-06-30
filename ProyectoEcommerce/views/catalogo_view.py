@@ -79,3 +79,4 @@ class CatalogoView(ttk.Frame):
         self.detalle_stock.config(text=f"Stock: {producto.stock}")
         self.detalle_descripcion.config(text=f"Descripción: {producto.descripcion or '-'}")
 
+

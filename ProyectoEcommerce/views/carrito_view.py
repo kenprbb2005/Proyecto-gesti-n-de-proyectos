@@ -128,3 +128,4 @@ class CarritoView(ttk.Frame):
         self.impuesto_lbl.config(text=f"IVA 13%: {money(impuesto)}")
         self.envio_lbl.config(text=f"Envío: {money(envio)}")
         self.total_lbl.config(text=f"Total: {money(total)}")
+
